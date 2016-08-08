@@ -65,6 +65,9 @@ void main()
 
     int selectedStack = 1;
 
+    bool victory = false;
+    float victoryTimer = 0;
+
     float delta;
     uint minFrameTimeMs = 10;
     float minFrameTime = (cast(float)minFrameTimeMs)/1000.0f;
@@ -84,6 +87,8 @@ void main()
                     running = false;
                     break;
                 case SDL_KEYDOWN:
+                    if (victory) break;
+
                     SDL_Keycode keycode = event.key.keysym.sym;
                     if ((keycode == SDLK_d || keycode == SDLK_RIGHT))
                     {
@@ -119,6 +124,12 @@ void main()
                                     {
                                         stacks[selectedStack][i] = heldPlate;
                                         heldPlate = Plate.EMPTY;
+
+                                        // Check for victory
+                                        if (i == 3 && selectedStack == 2)
+                                        {
+                                            victory = true;
+                                        }
                                     }
                                 }
                             }
@@ -175,7 +186,30 @@ void main()
             SDL_RenderFillRect(renderer, &rect);
         }
 
-        SDL_SetRenderDrawColor(renderer, 0xFA, 0xFA, 0xFA, 0xFF);
+        if (victory)
+        {
+            victoryTimer += delta;
+            SDL_SetRenderDrawColor(renderer, 0x2D, 0xFA, 0x2D, 0xFF);
+
+            if (victoryTimer > 2)
+            {
+                victory = false;
+                victoryTimer = 0;
+
+                stacks[0] = [
+                    Plate.FOURTH, Plate.THIRD, Plate.SECOND, Plate.FIRST
+                ];
+
+                stacks[2] = [
+                    Plate.EMPTY, Plate.EMPTY, Plate.EMPTY, Plate.EMPTY
+                ];
+            }
+        }
+        else
+        {
+            SDL_SetRenderDrawColor(renderer, 0xFA, 0xFA, 0xFA, 0xFF);
+        }
+
         int trianglePos = selectedStack*COLUMN_WIDTH + COLUMN_WIDTH/2;
         PositionTriangle(trianglePos, WINDOW_HEIGHT-20, triangle);
         SDL_RenderDrawLines(renderer, triangle.ptr, 4);
